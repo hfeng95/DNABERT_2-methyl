@@ -27,7 +27,7 @@ We publish DNABERT-S,  a foundation model based on DNABERT-2 specifically design
 
 ## 1. Introduction
 
-DNABERT-2 is a foundation model trained on large-scale multi-species genome that achieves the state-of-the-art performanan on $28$ tasks of the GUE benchmark. It replaces k-mer tokenization with BPE, positional embedding with Attention with Linear Bias (ALiBi), and incorporate other techniques to improve the efficiency and effectiveness of DNABERT.
+DNABERT-2 is a foundation model trained on large-scale multi-species genome that achieves the state-of-the-art performance on $28$ tasks of the GUE benchmark. It replaces k-mer tokenization with BPE, positional embedding with Attention with Linear Bias (ALiBi), and incorporate other techniques to improve the efficiency and effectiveness of DNABERT.
 
 
 
@@ -39,7 +39,7 @@ The pre-trained models is available at Huggingface as `zhihan1996/DNABERT-2-117M
 
 ### 2.1 GUE: Genome Understanding Evaluation
 
-GUE is a comprehensive benchmark for genome understanding consising of $28$ distinct datasets across $7$ tasks and $4$ species. GUE can be download [here](https://drive.google.com/file/d/1GRtbzTe3UXYF1oW27ASNhYX3SZ16D7N2/view?usp=sharing). Statistics and model performances on GUE is shown as follows:
+GUE is a comprehensive benchmark for genome understanding consising of $28$ distinct datasets across $7$ tasks and $4$ species. GUE can be download [here]([https://drive.google.com/file/d/1GRtbzTe3UXYF1oW27ASNhYX3SZ16D7N2/view?usp=sharing](https://drive.google.com/file/d/1uOrwlf07qGQuruXqGXWMpPn8avBoW7T-/view?usp=sharing)). Statistics and model performances on GUE is shown as follows:
 
 
 
@@ -76,13 +76,21 @@ GUE is a comprehensive benchmark for genome understanding consising of $28$ dist
 Our model is easy to use with the [transformers](https://github.com/huggingface/transformers) package.
 
 
-To load the model from huggingface:
+To load the model from huggingface (version 4.28):
 ```python
 import torch
 from transformers import AutoTokenizer, AutoModel
 
 tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
 model = AutoModel.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
+```
+
+To load the model from huggingface (version > 4.28):
+```python
+from transformers.models.bert.configuration_bert import BertConfig
+
+config = BertConfig.from_pretrained("zhihan1996/DNABERT-2-117M")
+model = AutoModel.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True, config=config)
 ```
 
 
@@ -105,7 +113,11 @@ print(embedding_max.shape) # expect to be 768
 
 ## 5. Pre-Training
 
-Codes for pre-training is coming soon.
+We used and slightly modified the MosaicBERT implementation for DNABERT-2 https://github.com/mosaicml/examples/tree/main/examples/benchmarks/bert . You should be able to replicate the model training following the instructions.
+
+Or you can use the run_mlm.py at https://github.com/huggingface/transformers/tree/main/examples/pytorch/language-modeling by importing the BertModelForMaskedLM from https://huggingface.co/zhihan1996/DNABERT-2-117M/blob/main/bert_layers.py. It should produce a very similar model.
+
+The training data is available [here](https://drive.google.com/file/d/1dSXJfwGpDSJ59ry9KAp8SugQLK35V83f/view?usp=sharing.). 
 
 
 
@@ -114,7 +126,7 @@ Codes for pre-training is coming soon.
 ## 6. Finetune
 
 ### 6.1 Evaluate models on GUE
-Please first download the GUE dataset from [here](https://drive.google.com/file/d/1GRtbzTe3UXYF1oW27ASNhYX3SZ16D7N2/view?usp=sharing). Then run the scripts to evaluate on all the tasks. 
+Please first download the GUE dataset from [here](https://drive.google.com/file/d/1uOrwlf07qGQuruXqGXWMpPn8avBoW7T-/view?usp=sharing). Then run the scripts to evaluate on all the tasks. 
 
 Current script is set to use `DataParallel` for training on 4 GPUs. If you have different number of GPUs, please change the `per_device_train_batch_size` and `gradient_accumulation_steps` accordingly to adjust the global batch size to 32 to replicate the results in the paper. If you would like to perform distributed multi-gpu training (e.g., with `DistributedDataParallel`), simply change `python` to `torchrun --nproc_per_node ${n_gpu}`.
 
@@ -191,7 +203,7 @@ python train.py \
 # Training use DistributedDataParallel (more efficient)
 export num_gpu=4 # please change the value based on your setup
 
-torchrun --nproc-per-node=${num_gpu} train.py \
+torchrun --nproc_per_node=${num_gpu} train.py \
     --model_name_or_path zhihan1996/DNABERT-2-117M \
     --data_path  ${DATA_PATH} \
     --kmer -1 \
